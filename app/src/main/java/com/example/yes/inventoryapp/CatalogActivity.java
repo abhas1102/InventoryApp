@@ -22,7 +22,7 @@ import android.widget.ListView;
 import com.example.yes.inventoryapp.ItemsContract.ProductEntry;
 
 /**
- * Displays list of products that were entered and stored in the app.
+ * Shows the list of products which was entered and stored in the app.
  */
 public class CatalogActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -36,7 +36,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_catalog);
 
-        // Setup FAB to open EditorActivity
+        // Floating button to go on CatalogEditor
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -47,20 +47,19 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         });
 
 
-        // Find the ListView which will be populated with the product data
-        ListView productListView = (ListView) findViewById(R.id.list);
+        // Finding ListView which will be populated with the Items
+        ListView ItemListView = (ListView) findViewById(R.id.list);
 
-        // Find and set empty view on the ListView, so that it only shows when the list has 0 items.
+        //  setting empty view on the ListView.
         View emptyView = findViewById(R.id.empty_view);
-        productListView.setEmptyView(emptyView);
+        ItemListView.setEmptyView(emptyView);
 
-        // Setup an Adapter to create a list item for each row of product data in the Cursor.
-        // There is no product data yest (until the loader finishes) so pass in null for theCursor
+        // Creating an Adapter to form a list item for each row of product data in the Cursor.
+        // There is no Items data yet, so pass in null for theCursor
         mCursorAdapter = new ItemsCursorAdapter(this, null);
-        productListView.setAdapter(mCursorAdapter);
+        ItemListView.setAdapter(mCursorAdapter);
 
-        // Setup item click listener
-        productListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        ItemListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                 // Create new intent to go to EditorActivity
@@ -68,8 +67,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
 
                 // From the content URI that represents the specific product that was clicked on,
                 // by appending "id" (passed as input to this method) onto the PerEntry#CONTENT_URI
-                // For example, the URI would be "content://com.example.android.products/product/2"
-                // if the product with ID 2 was clicked on
+
                 Uri currentProductUri = ContentUris.withAppendedId(ProductEntry.CONTENT_URI, id);
                 Log.i(LOG_TAG, "Current URI: " + currentProductUri);
 
@@ -82,7 +80,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
         });
 
 
-        // Kick off the loader
+
         getSupportLoaderManager().initLoader(PRODUCT_LOADER, null, this);
 
     }
@@ -90,7 +88,6 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu options from the res/menu/menu_catalog.xml file.
         // This adds menu items to the app bar.
         getMenuInflater().inflate(R.menu.menu_catalog, menu);
         return true;
@@ -106,34 +103,28 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
 
         Log.i(LOG_TAG, "Example photo uri: " + String.valueOf(imageUri));
 
-        // Create a ContentValues object where column names are the keys,
-        // and example's product attributes are the values.
+        // Create a ContentValues object
+
         ContentValues values = new ContentValues();
         values.put(ProductEntry.COLUMN_PRODUCT_NAME, getString(R.string.dummy_data_product_name));
         values.put(ProductEntry.COLUMN_PRODUCT_MODEL, getString(R.string.dummy_data_product_model));
         values.put(ProductEntry.COLUMN_PRODUCT_GRADE, ProductEntry.GRADE_NEW);
-        values.put(ProductEntry.COLUMN_PRODUCT_QUANTITY, 7);
+        values.put(ProductEntry.COLUMN_PRODUCT_QUANTITY, 9);
         values.put(ProductEntry.COLUMN_PRODUCT_PICTURE, String.valueOf(imageUri));
         values.put(ProductEntry.COLUMN_SUPPLIER_EMAIL, getString(R.string.dummy_data_supplier_email));
         values.put(ProductEntry.COLUMN_SUPPLIER_NAME, getString(R.string.dummy_data_supplier_name));
-        values.put(ProductEntry.COLUMN_PRODUCT_PRICE, 49.99);
+        values.put(ProductEntry.COLUMN_PRODUCT_PRICE, 97.00);
 
-        // Insert a new row for Toto into the provider using the ContentResolver.
-        // Use the {@link ProductEntry#CONTENT_URI} to indicate that we want to insert
-        // into the products database table.
-        // Receive the new content URI that will allow us to access Toto's data in the future.
+
         Uri newUri = getContentResolver().insert(ProductEntry.CONTENT_URI, values);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // User clicked on a menu option in the app bar overflow menu
         switch (item.getItemId()) {
-            // Respond to a click on the "Insert dummy data" menu option
             case R.id.action_insert_dummy_data:
                 insertProduct();
                 return true;
-            // Respond to a click on the "Delete all entries" menu option
             case R.id.action_delete_all_entries:
                 deleteAllProducts();
                 return true;
@@ -144,7 +135,7 @@ public class CatalogActivity extends AppCompatActivity implements LoaderManager.
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
 
-        // Define a projection that specifies the columns from the table we care about
+        // Defining a projection
         String[] projection = {
                 ProductEntry._ID,
                 ProductEntry.COLUMN_PRODUCT_NAME,

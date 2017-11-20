@@ -44,108 +44,49 @@ public class CatalogEditor extends AppCompatActivity implements
 
     private static final int EXISTING_PRODUCT_LOADER = 0;
 
-    /**
-     * URI of product image
-     */
+
     private Uri mImageUri;
 
-    /**
-     * Current quantity of product
-     */
     private int mQuantity;
 
-    /**
-     * Content URI for the existing product (null if it's a new product)
-     */
-    private Uri mCurrentProductUri;
+    private Uri mCurrentItemUri;
 
-    /**
-     * EditText field to enter the product's name
-     */
     private EditText mNameEditText;
 
-
-    /**
-     * EditText field to enter the product's model
-     */
     private EditText mModelEditText;
 
-    /**
-     * EditText field to enter the product's grade
-     */
     private Spinner mGradeSpinner;
 
-    /**
-     * ImageView field to enter the product's photo
-     */
     private ImageView mPhoto;
 
-    /**
-     * EditText field to enter the product's price
-     */
     private EditText mPrice;
 
-    /**
-     * EditText field to enter the supplier's namee
-     */
     private EditText mSupplierName;
 
-    /**
-     * EditText field to enter the supplier's e-mail
-     */
     private EditText mSupplierEmail;
 
-    /**
-     * EditText field to enter the product's quantity
-     */
     private EditText mQuantityEditText;
 
-    /**
-     * EditText field to displaying hint on EditorActivity at the bottom of photo
-     */
     private TextView mPhotoHintText;
 
-    /**
-     * Button ADD PRODUCT to increasing amount of product in the storehouse
-     */
-    private Button mAddProductButton;
+    private Button mAddItemButton;
 
-    /**
-     * Button REJECT PRODUCT to decreasing amount of product in the storehouse
-     */
-    private Button mRejectProductButton;
+    private Button mRejectItemButton;
 
-
-    /**
-     * Grade of the product. The possible valid values are in the ProductContract.java file:
-     * {@link ProductEntry#GRADE_UNKNOWN}, {@link ProductEntry#GRADE_NEW}, or
-     * {@link ProductEntry#GRADE_USED}.
-     */
     private int mGrade = ProductEntry.GRADE_UNKNOWN;
 
-    /**
-     * Boolean flag that keeps track of whether the product has been edited (true) or not (false)
-     */
-    private boolean mProductHasChanged = false;
+    private boolean mItemHasChanged = false;
 
-    /**
-     * EditText field to enter the product's quantity
-     */
     private int mCurrentQuantity = 0;
 
-    /**
-     * OnTouchListener that listens for any user touches on a View, implying that they are modifying
-     * the view, and we change the mProductHasChanged boolean to true.
-     */
     private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
         @Override
         public boolean onTouch(View view, MotionEvent motionEvent) {
-            mProductHasChanged = true;
+            mItemHasChanged = true;
             return false;
         }
     };
 
-    // BOOLEAN status for required fields,TRUE if these fields have been populated
     boolean hasAllRequiredValues = false;
 
     @Override
@@ -156,9 +97,9 @@ public class CatalogEditor extends AppCompatActivity implements
         // Examine the intent that was used to launch this activity,
         // in order to figure out if we're creating a new product or editing an existing one.
         Intent intent = getIntent();
-        mCurrentProductUri = intent.getData();
+        mCurrentItemUri = intent.getData();
 
-        // Find all relevant views that we will need to read user input from
+        // Find all relevant views that that suits according to the user input
         mNameEditText = (EditText) findViewById(R.id.edit_item_name);
         mModelEditText = (EditText) findViewById(R.id.edit_item_model);
         mQuantityEditText = (EditText) findViewById(R.id.edit_item_quantity);
@@ -167,14 +108,13 @@ public class CatalogEditor extends AppCompatActivity implements
         mPrice = (EditText) findViewById(R.id.edit_item_price);
         mSupplierName = (EditText) findViewById(R.id.edit_item_supplier_name);
         mSupplierEmail = (EditText) findViewById(R.id.edit_item_supplier_email);
-        mAddProductButton = (Button) findViewById(R.id.addItemButton);
-        mRejectProductButton = (Button) findViewById(R.id.rejectItemButton);
+        mAddItemButton = (Button) findViewById(R.id.addItemButton);
+        mRejectItemButton = (Button) findViewById(R.id.rejectItemButton);
         mPhotoHintText = (TextView) findViewById(R.id.add_or_edit_photo_hint);
 
 
-        // If the intent DOES NOT contain a product content URI, then we know that we are
-        // creating a new product.
-        if (mCurrentProductUri == null) {
+        // creating a new Item.
+        if (mCurrentItemUri == null) {
             // This is a new product, so change the app bar to say "Add a Product"
             setTitle(getString(R.string.editor_activity_title_new_product));
             mPhotoHintText.setText(getText(R.string.add_photo_hint_text));
@@ -182,30 +122,26 @@ public class CatalogEditor extends AppCompatActivity implements
             mSupplierEmail.setEnabled(true);
             mQuantityEditText.setEnabled(true);
             mPhoto.setImageResource(R.drawable.icon_empty_storehouse);
-            mAddProductButton.setVisibility(View.GONE);
-            mRejectProductButton.setVisibility(View.GONE);
+            mAddItemButton.setVisibility(View.GONE);
+            mRejectItemButton.setVisibility(View.GONE);
 
-            // Invalidate the options menu, so the "Delete" menu option can be hidden.
-            // (It doesn't make sense to delete a product that hasn't been created yet.)
             invalidateOptionsMenu();
         } else {
-            // Otherwise this is an existing product, so change app bar to say "Edit Product"
+
             setTitle(getString(R.string.editor_activity_title_edit_product));
             mPhotoHintText.setText(getText(R.string.edit_photo_hint_text));
             mSupplierName.setEnabled(false);
             mSupplierEmail.setEnabled(false);
             mQuantityEditText.setEnabled(false);
-            mAddProductButton.setVisibility(View.VISIBLE);
-            mRejectProductButton.setVisibility(View.VISIBLE);
+            mAddItemButton.setVisibility(View.VISIBLE);
+            mRejectItemButton.setVisibility(View.VISIBLE);
 
-            // Initialize a loader to read the product data from the database
-            // and display the current values in the editor
+            // Initialize a loader to read the Item data from the database
+            // and display the current values
             getLoaderManager().initLoader(EXISTING_PRODUCT_LOADER, null, this);
         }
 
-        // Setup OnTouchListeners on all the input fields, so we can determine if the user
-        // has touched or modified them. This will let us know if there are unsaved changes
-        // or not, if the user tries to leave the editor without saving.
+        // We are using touchListener to determine the user activity of unsaved data
         mNameEditText.setOnTouchListener(mTouchListener);
         mModelEditText.setOnTouchListener(mTouchListener);
         mQuantityEditText.setOnTouchListener(mTouchListener);
@@ -213,17 +149,17 @@ public class CatalogEditor extends AppCompatActivity implements
         mPrice.setOnTouchListener(mTouchListener);
         mSupplierName.setOnTouchListener(mTouchListener);
         mSupplierEmail.setOnTouchListener(mTouchListener);
-        mAddProductButton.setOnTouchListener(mTouchListener);
-        mRejectProductButton.setOnTouchListener(mTouchListener);
+        mAddItemButton.setOnTouchListener(mTouchListener);
+        mRejectItemButton.setOnTouchListener(mTouchListener);
 
-        mAddProductButton.setOnClickListener(new View.OnClickListener() {
+        mAddItemButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 addItemButton(v);
             }
         });
 
-        mRejectProductButton.setOnClickListener(new View.OnClickListener() {
+        mRejectItemButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 rejectItemButton(v);
@@ -234,7 +170,7 @@ public class CatalogEditor extends AppCompatActivity implements
             @Override
             public void onClick(View v) {
                 trySelector();
-                mProductHasChanged = true;
+                mItemHasChanged = true;
             }
         });
 
@@ -294,15 +230,15 @@ public class CatalogEditor extends AppCompatActivity implements
         intent.putExtra(android.content.Intent.EXTRA_SUBJECT, "New order: " +
                 mNameEditText.getText().toString().trim() +
                 " " + mModelEditText.getText().toString().trim());
-        String message = "We need to make a new order of: " +
+        String message = "We are going to make a new order of: " +
                 mNameEditText.getText().toString().trim() +
                 " " +
                 mModelEditText.getText().toString().trim() + "." +
                 "\n" +
-                "Please confirm that you can send to us ___ pcs." +
+                "Please confirm that I can receive ___ pcs." +
                 "\n" +
                 "\n" +
-                "Best regards," + "\n" +
+                "With regards," + "\n" +
                 "_________________";
         intent.putExtra(android.content.Intent.EXTRA_TEXT, message);
         startActivity(intent);
@@ -310,11 +246,10 @@ public class CatalogEditor extends AppCompatActivity implements
 
 
     /**
-     * Setup the dropdown spinner that allows the user to select the grade of the product.
+     * Spinner for allowing the user to select the grade of the product.
      */
     private void setupSpinner() {
-        // Create adapter for spinner. The list options are from the String array it will use
-        // the spinner will use the default layout
+        // Create adapter for spinner.
         ArrayAdapter gradeSpinnerAdapter = ArrayAdapter.createFromResource(this,
                 R.array.array_grade_options, android.R.layout.simple_spinner_item);
 
@@ -353,11 +288,8 @@ public class CatalogEditor extends AppCompatActivity implements
      */
     private boolean saveProduct() {
 
-
-        // Quantity of products
         int quantity;
 
-        // Read from input fields
         // Use trim to eliminate leading or trailing white space
         String nameString = mNameEditText.getText().toString().trim();
         String modelString = mModelEditText.getText().toString().trim();
@@ -369,7 +301,7 @@ public class CatalogEditor extends AppCompatActivity implements
 
         // Check if this is supposed to be a new product
         // and check if all the fields in the editor are blank
-        if (mCurrentProductUri == null &&
+        if (mCurrentItemUri == null &&
                 TextUtils.isEmpty(nameString) &&
                 TextUtils.isEmpty(modelString) &&
                 TextUtils.isEmpty(quantityString) &&
@@ -378,18 +310,15 @@ public class CatalogEditor extends AppCompatActivity implements
                 TextUtils.isEmpty(supplierNameString) &&
                 TextUtils.isEmpty(supplierEmailString) &&
                 mImageUri == null) {
-            // Since no fields were modified, we can return early without creating a new product.
-            // No need to create ContentValues and no need to do any ContentProvider operations.
+            // Because of no fields are modified, we can return early without creating a new product.
             hasAllRequiredValues = true;
             return hasAllRequiredValues;
         }
 
-        // Create a ContentValues object where column names are the keys,
-        // and product attributes from the editor are the values.
+        // Create a ContentValues object
         ContentValues values = new ContentValues();
 
-        // REQUIRED VALUES
-        // Validation section
+
         if (TextUtils.isEmpty(nameString)) {
             Toast.makeText(this, getString(R.string.validation_msg_product_name), Toast.LENGTH_SHORT).show();
             return hasAllRequiredValues;
@@ -429,7 +358,7 @@ public class CatalogEditor extends AppCompatActivity implements
 
 
         // Determine if this is a new or existing product by checking if mCurrentProductUri is null or not
-        if (mCurrentProductUri == null) {
+        if (mCurrentItemUri == null) {
             // This is a NEW product, so insert a new product into the provider,
             // returning the content URI for the new product.
             Uri newUri = getContentResolver().insert(ProductEntry.CONTENT_URI, values);
@@ -445,19 +374,13 @@ public class CatalogEditor extends AppCompatActivity implements
                         Toast.LENGTH_SHORT).show();
             }
         } else {
-            // Otherwise this is an EXISTING product, so update the product with content URI: mCurrentProductUri
-            // and pass in the new ContentValues. Pass in null for the selection and selection args
-            // because mCurrentProductUri will already identify the correct row in the database that
-            // we want to modify.
-            int rowsAffected = getContentResolver().update(mCurrentProductUri, values, null, null);
+            int rowsAffected = getContentResolver().update(mCurrentItemUri, values, null, null);
 
             // Show a toast message depending on whether or not the update was successful.
             if (rowsAffected == 0) {
-                // If no rows were affected, then there was an error with the update.
                 Toast.makeText(this, getString(R.string.editor_update_product_failed),
                         Toast.LENGTH_SHORT).show();
             } else {
-                // Otherwise, the update was successful and we can display a toast.
                 Toast.makeText(this, getString(R.string.editor_update_product_successful),
                         Toast.LENGTH_SHORT).show();
             }
@@ -470,7 +393,6 @@ public class CatalogEditor extends AppCompatActivity implements
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu options from the res/menu/menu_editor.xml file.
         // This adds menu items to the app bar.
         getMenuInflater().inflate(R.menu.menu_editor, menu);
         return true;
@@ -480,7 +402,7 @@ public class CatalogEditor extends AppCompatActivity implements
     public boolean onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
         // If this is a new product, hide the "Delete" menu item.
-        if (mCurrentProductUri == null) {
+        if (mCurrentItemUri == null) {
             MenuItem menuItem = menu.findItem(R.id.action_delete);
             menuItem.setVisible(false);
         }
@@ -511,21 +433,15 @@ public class CatalogEditor extends AppCompatActivity implements
                 return true;
             // Respond to a click on the "Up" arrow button in the app bar
             case android.R.id.home:
-                // If the product hasn't changed, continue with navigating up to parent activity
-                // which is the {@link CatalogActivity}.
-                if (!mProductHasChanged) {
+                if (!mItemHasChanged) {
                     NavUtils.navigateUpFromSameTask(CatalogEditor.this);
                     return true;
                 }
-
-                // Otherwise if there are unsaved changes, setup a dialog to warn the user.
-                // Create a click listener to handle the user confirming that
-                // changes should be discarded.
                 DialogInterface.OnClickListener discardButtonClickListener =
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                // User clicked "Discard" button, navigate to parent activity.
+                                // User clicked "Discard" button, go to parent activity.
                                 NavUtils.navigateUpFromSameTask(CatalogEditor.this);
                             }
                         };
@@ -542,32 +458,26 @@ public class CatalogEditor extends AppCompatActivity implements
      */
     @Override
     public void onBackPressed() {
-        // If the product hasn't changed, continue with handling back button press
-        if (!mProductHasChanged) {
+        if (!mItemHasChanged) {
             super.onBackPressed();
             return;
         }
-
-        // Otherwise if there are unsaved changes, setup a dialog to warn the user.
-        // Create a click listener to handle the user confirming that changes should be discarded.
         DialogInterface.OnClickListener discardButtonClickListener =
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialogInterface, int i) {
-                        // User clicked "Discard" button, close the current activity.
                         finish();
                     }
                 };
 
-        // Show dialog that there are unsaved changes
+        // Show message that there are unsaved changes
         showUnsavedChangesDialog(discardButtonClickListener);
     }
 
 
     @Override
     public Loader<Cursor> onCreateLoader(int i, Bundle bundle) {
-        // Since the editor shows all product attributes, define a projection that contains
-        // all columns from the product table
+       //defining a projection with all required attributes
         String[] projection = {
                 ProductEntry._ID,
                 ProductEntry.COLUMN_PRODUCT_NAME,
@@ -582,7 +492,7 @@ public class CatalogEditor extends AppCompatActivity implements
 
         // This loader will execute the ContentProvider's query method on a background thread
         return new CursorLoader(this,       // Parent activity context
-                mCurrentProductUri,         // Query the content URI for the current product
+                mCurrentItemUri,         // Query the content URI for the current product
                 projection,                 // Columns to include in the resulting Cursor
                 null,                       // No selection clause
                 null,                       // No selection arguments
@@ -595,11 +505,7 @@ public class CatalogEditor extends AppCompatActivity implements
         if (cursor == null || cursor.getCount() < 1) {
             return;
         }
-
-        // Proceed with moving to the first row of the cursor and reading data from it
-        // (This should be the only row in the cursor)
         if (cursor.moveToFirst()) {
-            // Find the columns of product attributes that we're interested in
             int nameColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_NAME);
             int modelColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_MODEL);
             int gradeColumnIndex = cursor.getColumnIndex(ProductEntry.COLUMN_PRODUCT_GRADE);
@@ -630,9 +536,7 @@ public class CatalogEditor extends AppCompatActivity implements
             mSupplierEmail.setText(supplierEmail);
             mQuantityEditText.setText(Integer.toString(quantity));
 
-            // Grade is a dropdown spinner, so map the constant value from the database
-            // into one of the dropdown options (0 is Unknown, 1 is Male, 2 is Female).
-            // Then call setSelection() so that option is displayed on screen as the current selection.
+           //Mapping the value to the spinner grade.
             switch (grade) {
                 case ProductEntry.GRADE_NEW:
                     mGradeSpinner.setSelection(1);
@@ -657,56 +561,43 @@ public class CatalogEditor extends AppCompatActivity implements
         mSupplierName.setText("");
         mSupplierEmail.setText("");
         mQuantityEditText.setText("");
-        mGradeSpinner.setSelection(0); // Select "Unknown" grade
+        mGradeSpinner.setSelection(0);
     }
 
-    /**
-     * Show a dialog that warns the user there are unsaved changes that will be lost
-     * if they continue leaving the editor.
-     *
-     * @param discardButtonClickListener is the click listener for what to do when
-     *                                   the user confirms they want to discard their changes
-     */
     private void showUnsavedChangesDialog(
             DialogInterface.OnClickListener discardButtonClickListener) {
-        // Create an AlertDialog.Builder and set the message, and click listeners
+        // An AlertDialog.Builder and setting the message, and click listeners
         // for the positive and negative buttons on the dialog.
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(R.string.unsaved_changes_dialog_msg);
         builder.setPositiveButton(R.string.discard, discardButtonClickListener);
         builder.setNegativeButton(R.string.keep_editing, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                // User clicked the "Keep editing" button, so dismiss the dialog
-                // and continue editing the product.
                 if (dialog != null) {
                     dialog.dismiss();
                 }
             }
         });
 
-        // Create and show the AlertDialog
         AlertDialog alertDialog = builder.create();
         alertDialog.show();
     }
 
     /**
-     * Prompt the user to confirm that they want to delete this product.
+     * Prompt the user to confirm for deleting the product .
      */
     private void showDeleteConfirmationDialog() {
-        // Create an AlertDialog.Builder and set the message, and click listeners
+        // An AlertDialog.Builder and setting the message, and click listeners
         // for the positive and negative buttons on the dialog.
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setMessage(R.string.delete_dialog_msg);
         builder.setPositiveButton(R.string.delete, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                // User clicked the "Delete" button, so delete the product.
                 deleteProduct();
             }
         });
         builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int id) {
-                // User clicked the "Cancel" button, so dismiss the dialog
-                // and continue editing the product.
                 if (dialog != null) {
                     dialog.dismiss();
                 }
@@ -723,19 +614,13 @@ public class CatalogEditor extends AppCompatActivity implements
      */
     private void deleteProduct() {
         // Only perform the delete if this is an existing product.
-        if (mCurrentProductUri != null) {
-            // Call the ContentResolver to delete the product at the given content URI.
-            // Pass in null for the selection and selection args because the mCurrentProductUri
-            // content URI already identifies the product that we want.
-            int rowsDeleted = getContentResolver().delete(mCurrentProductUri, null, null);
+        if (mCurrentItemUri != null) {
+            int rowsDeleted = getContentResolver().delete(mCurrentItemUri, null, null);
 
-            // Show a toast message depending on whether or not the delete was successful.
             if (rowsDeleted == 0) {
-                // If no rows were deleted, then there was an error with the delete.
                 Toast.makeText(this, getString(R.string.editor_delete_product_failed),
                         Toast.LENGTH_SHORT).show();
             } else {
-                // Otherwise, the delete was successful and we can display a toast.
                 Toast.makeText(this, getString(R.string.editor_delete_product_successful),
                         Toast.LENGTH_SHORT).show();
             }
@@ -752,7 +637,7 @@ public class CatalogEditor extends AppCompatActivity implements
 
     public void rejectItemButton(View view) {
         if (mQuantity == 0) {
-            Toast.makeText(this, "Can't decrease quantity", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "Not Allowed!!", Toast.LENGTH_SHORT).show();
         } else {
             mQuantity--;
             displayQuantity();

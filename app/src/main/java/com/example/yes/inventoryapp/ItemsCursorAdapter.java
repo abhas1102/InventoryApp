@@ -32,30 +32,12 @@ public class ItemsCursorAdapter extends CursorAdapter {
         super(context, c, 0 /* flags */);
     }
 
-    /**
-     * Makes a new blank list item view. No data is set (or bound) to the views yet.
-     *
-     * @param context app context
-     * @param cursor  The cursor from which to get the data. The cursor is already
-     *                moved to the correct position.
-     * @param parent  The parent to which the new view is attached to
-     * @return the newly created list item view.
-     */
     @Override
     public View newView(Context context, Cursor cursor, ViewGroup parent) {
         return LayoutInflater.from(context).inflate(R.layout.list_item, parent, false);
     }
 
-    /**
-     * This method binds the product data (in the current row pointed to by cursor) to the given
-     * list item layout. For example, the name for the current product can be set on the name TextView
-     * in the list item layout.
-     *
-     * @param view    Existing view, returned earlier by newView() method
-     * @param context app context
-     * @param cursor  The cursor from which to get the data. The cursor is already moved to the
-     *                correct row.
-     */
+    //Use of bindview will started from here
     @Override
     public void bindView(View view, final Context context, Cursor cursor) {
         // Find individual views that we want to modify in the list item layout
@@ -66,7 +48,7 @@ public class ItemsCursorAdapter extends CursorAdapter {
         ImageView photoImageView = (ImageView) view.findViewById(R.id.product_image);
         ImageButton buyImageButton = (ImageButton) view.findViewById(R.id.item_buy_button);
 
-        // Find the columns of product attributes that we're interested in
+        // Find the columns of product attributes that we want.
         final int productIdColumnIndex = cursor.getInt(cursor.getColumnIndex(ItemsContract.ProductEntry._ID));
         int nameColumnIndex = cursor.getColumnIndex(ItemsContract.ProductEntry.COLUMN_PRODUCT_NAME);
         int modelColumnIndex = cursor.getColumnIndex(ItemsContract.ProductEntry.COLUMN_PRODUCT_MODEL);
@@ -74,7 +56,6 @@ public class ItemsCursorAdapter extends CursorAdapter {
         int quantityColumnIndex = cursor.getColumnIndex(ItemsContract.ProductEntry.COLUMN_PRODUCT_QUANTITY);
         int photoColumnIndex = cursor.getColumnIndex(ItemsContract.ProductEntry.COLUMN_PRODUCT_PICTURE);
 
-        // Read the product attributes from the Cursor for the current product
         String productName = cursor.getString(nameColumnIndex);
         String productModel = cursor.getString(modelColumnIndex);
         String productPrice = cursor.getString(priceColumnIndex);
@@ -102,33 +83,24 @@ public class ItemsCursorAdapter extends CursorAdapter {
             }
         });
     }
-
-    /**
-     * This method reduced product stock by 1
-     *
-     * @param context                - Activity context
-     * @param productUri             - Uri used to update the stock of a specific product in the ListView
-     * @param currentQuantityInStock - current stock of that specific product
-     */
     private void adjustProductQuantity(Context context, Uri productUri, int currentQuantityInStock) {
 
-        // Subtract 1 from current value if quantity of product >= 1
+        // Decrease 1 from present value if quantity of product >= 1
         int newQuantityValue = (currentQuantityInStock >= 1) ? currentQuantityInStock - 1 : 0;
 
         if (currentQuantityInStock == 0) {
             Toast.makeText(context.getApplicationContext(), R.string.toast_out_of_stock_msg, Toast.LENGTH_SHORT).show();
         }
 
-        // Update table by using new value of quantity
         ContentValues contentValues = new ContentValues();
         contentValues.put(ItemsContract.ProductEntry.COLUMN_PRODUCT_QUANTITY, newQuantityValue);
         int numRowsUpdated = context.getContentResolver().update(productUri, contentValues, null, null);
         if (numRowsUpdated > 0) {
-            // Show error message in Logs with info about pass update.
+            // Reflect error message in Logs with info about pass update.
             Log.i(TAG, context.getString(R.string.buy_msg_confirm));
         } else {
             Toast.makeText(context.getApplicationContext(), R.string.no_product_in_stock, Toast.LENGTH_SHORT).show();
-            // Show error message in Logs with info about fail update.
+            // Reflect error message in Logs with info about fail update.
             Log.e(TAG, context.getString(R.string.error_msg_stock_update));
         }
 
